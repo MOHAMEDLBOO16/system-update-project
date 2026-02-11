@@ -1,13 +1,15 @@
 name: Build APK
-on: [push, pull_request]
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build with Buildozer
-        uses: ArtemSerebrenninkov/buildozer-action@v1
-        with:
-          command: buildozer -v android debug
-          repository_read_token: ${{ secrets.GITHUB_TOKEN }}
-        
+      - name: Install Tools
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential git python3 python3-dev zip unzip openjdk-17-jdk
+          pip3 install --user --upgrade buildozer cython==0.29.33 kivy requests
+      - name: Build
+        run: |
+          yes | /home/runner/.local/bin/buildozer -v android debug
