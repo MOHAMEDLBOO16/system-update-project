@@ -4,23 +4,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4 # تم التحديث إلى v4
+      
       - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4 # تم التحديث إلى v4
         with:
           java-version: '17'
           distribution: 'adopt'
+          
       - name: Install Dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential git python3 python3-dev zip unzip openjdk-17-jdk libffi-dev libssl-dev
           pip3 install --user --upgrade buildozer cython==0.29.33 kivy requests
+          
       - name: Build with Buildozer
         run: |
-          # هذا السطر يقبل التراخيص ويشغل البناء فوراً
           yes | /home/runner/.local/bin/buildozer -v android debug
+          
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4 # تم التحديث إلى v4 (هذا يحل الخطأ الأخير)
         with:
           name: my-app-apk
           path: bin/*.apk
