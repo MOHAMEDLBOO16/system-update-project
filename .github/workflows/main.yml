@@ -1,31 +1,25 @@
-name: Build APK
+name: Build
 on: [push]
-
 jobs:
-  build:
+  android:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
+      - uses: actions/checkout@v4
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Install Buildozer dependencies
+      - name: Install Buildozer
         run: |
           sudo apt update
           sudo apt install -y build-essential git python3 python3-dev zip unzip openjdk-17-jdk libffi-dev libssl-dev
           pip3 install --user --upgrade buildozer cython==0.29.33 kivy requests
-
-      - name: Build APK
+      - name: Run Build
         run: |
           yes | /home/runner/.local/bin/buildozer -v android debug
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-app-apk
+          name: app-release
           path: bin/*.apk
