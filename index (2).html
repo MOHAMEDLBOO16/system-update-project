@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>صدى الظلال - مريم ستايل</title>
+    <style>
+        :root { --red: #ff0000; --bg: #000; }
+        body {
+            background: var(--bg); color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0; overflow: hidden; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* شاشة البداية (المطور) */
+        #intro-screen {
+            position: fixed; inset: 0; background: #000; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 1.5s;
+        }
+        .dev-name { font-size: 2rem; color: #444; letter-spacing: 5px; animation: flicker 3s infinite; }
+        .start-btn { margin-top: 30px; padding: 10px 40px; background: transparent; border: 1px solid #333; color: #888; cursor: pointer; font-size: 1.2rem; }
+        .start-btn:hover { color: #fff; border-color: #fff; box-shadow: 0 0 20px #fff; }
+
+        /* حاوية اللعبة */
+        #game-container {
+            max-width: 600px; width: 90%; display: none;
+            position: relative; z-index: 10;
+        }
+        .story-text { font-size: 1.5rem; line-height: 1.6; text-shadow: 0 0 10px rgba(255,0,0,0.5); margin-bottom: 40px; }
+        .choices-container { display: flex; flex-direction: column; gap: 20px; }
+        .choice-btn {
+            background: #0a0a0a; border: 1px solid #222; color: #666;
+            padding: 15px; cursor: pointer; transition: 0.3s; text-align: right;
+        }
+        .choice-btn:hover { background: #1a0000; color: var(--red); border-color: var(--red); }
+
+        /* تأثير الاهتزاز (Scary Shake) */
+        .shake { animation: shake 0.2s infinite; color: var(--red) !important; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            40% { transform: translate(3px, 2px) rotate(-1deg); }
+            100% { transform: translate(1px, -1px) rotate(0deg); }
+        }
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 22%, 24%, 55% { opacity: 0; }
+        }
+
+        .dust { position: fixed; inset: 0; background: url('https://media.giphy.com/media/oEI9uWUqnW3CeMUw5B/giphy.gif'); opacity: 0.05; pointer-events: none; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div class="dust"></div>
+
+    <div id="intro-screen">
+        <div class="dev-name">المطور لبوخ محمد رضا</div>
+        <p style="color: #222; font-size: 0.8rem;">يقدم تجربة رعب نفسية</p>
+        <button class="start-btn" onclick="initGame()">ابدأ الرحلة</button>
+    </div>
+
+    <div id="game-container">
+        <div class="story-text" id="text"></div>
+        <div class="choices-container" id="choices"></div>
+    </div>
+
+    <audio id="bg-music" loop src="https://www.soundjay.com/nature/sounds/wind-howl-01.mp3"></audio>
+    <audio id="scream-sound" src="https://www.soundjay.com/mechanical/sounds/iron-gate-opening-01.mp3"></audio>
+
+    <script>
+        const storyData = {
+            start: {
+                text: "أهلاً بك.. هل تعرف من أنا؟ لا يهم.. أخبرني، هل أنت وحدك في الغرفة الآن؟",
+                choices: [
+                    { text: "نعم، أنا وحدي", next: "name_ask" },
+                    { text: "لا، هناك شخص معي", next: "paranoid" }
+                ]
+            },
+            name_ask: {
+                text: "جميل.. والباب الذي خلفك، هل تأكدت من إغلاقه؟ أسمع صوت أنفاس خلفك..",
+                choices: [
+                    { text: "ألتفت للخلف بسرعة", next: "scare" },
+                    { text: "أتجاهل الصوت وأكمل", next: "brave" }
+                ]
+            },
+            paranoid: {
+                text: "كاذب.. أنا أراك الآن، أنت تجلس وتحمل هاتفك. لا تحاول خداعي مرة أخرى.",
+                choices: [
+                    { text: "من أنت؟", next: "scare" },
+                    { text: "أغلق اللعبة (لن تستطيع)", next: "scare" }
+                ]
+            },
+            scare: {
+                text: "لقد اقتربتُ منك جداً.. التفت الآن.. التفتتتتتتتتتتتتتتت!",
+                choices: [
+                    { text: "صرخة!", next: "start" }
+                ],
+                shake: true
+            },
+            brave: {
+                text: "شجاعتك ستكون نهايتك.. هل تسمع هذا الصوت؟ (صوت باب يفتح ببطء)",
+                choices: [
+                    { text: "اختبئ تحت السرير", next: "start" }
+                ]
+            }
+        };
+
+        const textEl = document.getElementById('text');
+        const choicesEl = document.getElementById('choices');
+        const scream = document.getElementById('scream-sound');
+
+        function initGame() {
+            document.getElementById('intro-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('game-container').style.display = 'block';
+                document.getElementById('bg-music').play();
+                showNode('start');
+            }, 1500);
+        }
+
+        function showNode(id) {
+            const node = storyData[id];
+            
+            // تأثير الرعب (الاهتزاز)
+            if (node.shake) {
+                document.body.classList.add('shake');
+                scream.play();
+                setTimeout(() => document.body.classList.remove('shake'), 2000);
+            }
+
+            // كتابة النص بتأثير متقطع
+            textEl.innerText = node.text;
+            choicesEl.innerHTML = '';
+
+            node.choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.innerText = c.text;
+                btn.classList.add('choice-btn');
+                btn.onclick = () => {
+                    playClick();
+                    showNode(c.next);
+                };
+                choicesEl.appendChild(btn);
+            });
+        }
+
+        function playClick() {
+            const click = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+            click.volume = 0.5;
+            click.play();
+        }
+    </script>
+</body>
+</html>
